@@ -22,6 +22,10 @@
       <button id="add-agent" class="btn" title="Новый ИИ-агент"><i class="dot dot-agent"></i>Агент</button>
       <button id="add-source" class="btn" title="Блок, откуда приходят данные"><i class="dot dot-source"></i>Вход</button>
       <button id="add-sink" class="btn" title="Блок, куда приходит итог"><i class="dot dot-sink"></i>Результат</button>
+      <div class="tpl">
+        <button id="tpl-btn" class="btn" aria-haspopup="menu" aria-expanded="false" title="Готовые цепочки агентов">Шаблоны ▾</button>
+        <div id="tpl-menu" class="tpl-menu" role="menu" hidden></div>
+      </div>
       <span class="toolbar-sep"></span>
       <div class="mode" role="radiogroup" aria-label="Режим запуска">
         <button id="mode-sim" class="mode-btn is-on" role="radio" aria-checked="true" title="Только анимация, бесплатно">Симуляция</button>
@@ -87,6 +91,7 @@
     </div>
   </div>
 
+  <script src="templates.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

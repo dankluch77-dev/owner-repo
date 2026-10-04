@@ -20,6 +20,13 @@ const EFFORTS = [
   { id: 'max', name: 'Максимум', note: 'Когда качество важнее цены и времени.' },
 ];
 
+const SEARCH_PRICE = 0.01;     // $10 за 1000 поисковых запросов
+
+const TOOLS = [
+  { id: 'webSearch', name: 'Веб-поиск', note: 'Агент сам ищет в интернете. Около $0,01 за каждый поисковый запрос, не больше 10 запросов за ход.' },
+  { id: 'webFetch', name: 'Чтение страниц', note: 'Агент открывает найденные ссылки и читает страницу целиком. Платишь только за токены текста.' },
+];
+
 const OLD_STEP_3 = 'Запрос уходит в выбранную модель Claude через API. Сейчас это симуляция, настоящий вызов подключим на следующем этапе.';
 
 const ICONS = {
@@ -73,6 +80,7 @@ function makeNode(kind, x, y) {
     role: '',
     model: 'claude-opus-5-5',
     effort: 'medium',
+    tools: { webSearch: false, webFetch: false },
     input: { text: 'Текст от предыдущего блока', example: '' },
     steps: claudeSteps(),
     systemPrompt: '',
@@ -133,6 +141,7 @@ function normalize(raw) {
       if (n.kind === 'agent') {
         node.input = { ...tpl.input, ...(n.input || {}) };
         node.output = { ...tpl.output, ...(n.output || {}) };
+        node.tools = { webSearch: Boolean(n.tools?.webSearch), webFetch: Boolean(n.tools?.webFetch) };
         node.steps = Array.isArray(n.steps) ? n.steps.map((s) => ({ title: String(s?.title ?? ''), detail: String(s?.detail ?? '') })) : tpl.steps;
         node.steps.forEach((s) => { if (s.detail === OLD_STEP_3) s.detail = claudeSteps()[2].detail; });
         if (node.model === 'claude-haiku-4-5-20251001') node.model = 'claude-haiku-4-5';
@@ -189,7 +198,7 @@ const store = window.studio
    Состояние
    ================================================================ */
 
-let schema = defaultSchema();
+let schema = normalize(defaultSchema());
 const view = { x: 0, y: 0, zoom: 1 };
 let selection = null;         // { type: 'node' | 'link', id }
 let gesture = null;           // текущее перетаскивание
@@ -299,7 +308,10 @@ function nodeBody(n) {
     const model = modelById(n.model);
     return `
       ${n.role ? `<div class="node-role">${esc(short(n.role, 70))}</div>` : ''}
-      <span class="node-model">${esc(model ? model.name : n.model)}</span>
+      <div class="node-chips">
+        <span class="node-model">${esc(model ? model.name : n.model)}</span>
+        ${TOOLS.filter((t) => n.tools[t.id]).map((t) => `<span class="node-model node-tool">${esc(t.name.toLowerCase())}</span>`).join('')}
+      </div>
       <dl class="node-io">
         <dt>Получает</dt><dd>${esc(short(n.input.text, 40)) || '—'}</dd>
         <dt>Отдаёт</dt><dd>${esc(short(n.output.text, 40)) || '—'}</dd>
@@ -326,7 +338,7 @@ function runStats(r) {
 function costOf(r) {
   const m = modelById(r.servedModel) || modelById(r.model);
   if (!m || !r.usage) return null;
-  return (r.usage.input * m.price[0] + r.usage.output * m.price[1]) / 1e6;
+  return (r.usage.input * m.price[0] + r.usage.output * m.price[1]) / 1e6 + (r.usage.searches || 0) * SEARCH_PRICE;
 }
 
 function nodeProgress(n) {
@@ -470,6 +482,15 @@ function agentPanel(n) {
     </section>
 
     <section class="section">
+      <div class="section-head"><h3 class="section-title">Инструменты</h3><span class="section-note">в режиме «Claude API»</span></div>
+      ${TOOLS.map((t) => `
+        <label class="check">
+          <input type="checkbox" id="f-tool-${t.id}" data-tool="${t.id}" ${n.tools[t.id] ? 'checked' : ''}>
+          <span><strong>${esc(t.name)}</strong><span class="field-hint">${esc(t.note)}</span></span>
+        </label>`).join('')}
+    </section>
+
+    <section class="section">
       <div class="section-head">
         <h3 class="section-title">Получает</h3>
         <span class="section-note">${incoming.length ? 'от: ' + esc(namesOf(incoming)) : 'ни с кем не соединён'}</span>
@@ -538,11 +559,19 @@ function runSectionHtml(n) {
       <div class="field-label">Сообщение (шаблон с подставленным входом)</div>
       <pre class="readout" id="lr-user"></pre>
     </details>
+    <details class="run-details" id="lr-log-box" hidden>
+      <summary id="lr-log-title">Что делал агент</summary>
+      <ol class="run-log" id="lr-log"></ol>
+    </details>
+    <details class="run-details" id="lr-sources-box" hidden>
+      <summary id="lr-sources-title">Источники</summary>
+      <ul class="run-sources" id="lr-sources"></ul>
+    </details>
     <details class="run-details" id="lr-thinking-box">
       <summary>Как модель рассуждала (кратко)</summary>
       <pre class="readout" id="lr-thinking"></pre>
     </details>
-    <div class="field-label">Ответ</div>
+    <div class="section-head"><span class="field-label">Ответ</span><button class="btn btn-quiet btn-small" data-action="copy" data-copy="#lr-answer">Копировать</button></div>
     <pre class="readout readout-answer" id="lr-answer"></pre>`;
 }
 
@@ -562,11 +591,26 @@ function fillRunSection() {
   meta.push((m ? m.name : r.model) + (m?.effort === false ? '' : ', усилие: ' + (EFFORTS.find((e) => e.id === r.effort)?.name || r.effort).toLowerCase()));
   if (r.servedModel && r.servedModel !== r.model) meta.push('ответила модель ' + r.servedModel);
   if (r.note) meta.push(r.note);
-  if (r.usage) meta.push(`токенов: ${r.usage.input} на входе, ${r.usage.output} на выходе`);
+  if (r.usage) meta.push(`токенов: ${r.usage.input} на входе, ${r.usage.output} на выходе` + (r.usage.searches ? `, поисков: ${r.usage.searches}` : ''));
   const stats = !isLive && runStats(r);
   if (stats) meta.push(stats);
   if (r.at && !isLive) meta.push(new Date(r.at).toLocaleString('ru-RU'));
   $('#lr-meta', els.panel).textContent = meta.join(' · ');
+
+  const log = r.log || [];
+  $('#lr-log-box', els.panel).hidden = !log.length;
+  $('#lr-log-title', els.panel).textContent = `Что делал агент (${log.length})`;
+  const logEl = $('#lr-log', els.panel);
+  logEl.replaceChildren(...log.map((line) => Object.assign(document.createElement('li'), { textContent: line })));
+  const sources = r.sources || [];
+  $('#lr-sources-box', els.panel).hidden = !sources.length;
+  $('#lr-sources-title', els.panel).textContent = `Источники (${sources.length})`;
+  $('#lr-sources', els.panel).replaceChildren(...sources.map((src) => {
+    const li = document.createElement('li');
+    const a = Object.assign(document.createElement('a'), { href: src.url, target: '_blank', rel: 'noreferrer', textContent: src.title || src.url });
+    li.append(a);
+    return li;
+  }));
 
   $('#lr-system', els.panel).textContent = r.system || '(нет)';
   $('#lr-user', els.panel).textContent = r.user || '';
@@ -597,7 +641,7 @@ function simplePanel(n) {
       </div>
       ${isSource
         ? field('Данные для старта', 'Этот текст уйдёт по линии первым при запуске.', `<textarea id="f-data" class="textarea" data-field="data" rows="5">${esc(n.data)}</textarea>`)
-        : `<div class="field-hint">${got ? 'При последнем запуске пришло:' : 'Запусти цепочку, и здесь появится итог.'}</div>${got ? `<pre class="readout readout-answer">${esc(got)}</pre>` : ''}`}
+        : `<div class="field-hint">${got ? 'При последнем запуске пришло:' : 'Запусти цепочку, и здесь появится итог.'}</div>${got ? `<pre class="readout readout-answer" id="sink-result">${esc(got)}</pre><button class="btn btn-small add-step" data-action="copy" data-copy="#sink-result">Копировать</button>` : ''}`}
     </section>
     <div class="panel-foot">
       <button class="btn btn-danger" data-action="delete-node">Удалить блок</button>
@@ -645,7 +689,9 @@ els.panel.addEventListener('input', (e) => {
   const t = e.target;
   const n = selection?.type === 'node' && nodeById(selection.id);
   if (!n) return;
-  if (t.dataset.field) {
+  if (t.dataset.tool) {
+    n.tools[t.dataset.tool] = t.checked;
+  } else if (t.dataset.field) {
     setPath(n, t.dataset.field, t.value);
     if (t.dataset.field === 'model') { renderNodes(); renderPanel(); scheduleSave(); return; }
     if (t.dataset.field === 'effort') $('#effort-note', els.panel).textContent = EFFORTS.find((x) => x.id === t.value)?.note || '';
@@ -666,6 +712,11 @@ els.panel.addEventListener('click', (e) => {
   const n = selection?.type === 'node' && nodeById(selection.id);
   const i = Number(btn.closest('.step')?.dataset.step);
 
+  if (action === 'copy') {
+    const text = $(btn.dataset.copy, els.panel)?.textContent || '';
+    navigator.clipboard.writeText(text).then(() => toast('Скопировано'), () => toast('Не удалось скопировать: выдели текст и нажми Ctrl+C'));
+    return;
+  }
   if (action === 'delete-node' || action === 'delete-link') return deleteSelection();
   if (action === 'duplicate' && n) return duplicateNode(n);
   if (!n) return;
@@ -717,6 +768,42 @@ function addNode(kind, at) {
   select({ type: 'node', id: node.id });
   scheduleSave();
   if (kind === 'agent') setTimeout(() => $('#f-name')?.select(), 0);
+}
+
+function addTemplate(t) {
+  let baseX = 40;
+  let baseY = 40;
+  if (schema.nodes.length) {
+    const bottom = Math.max(...schema.nodes.map((n) => {
+      const el = els.nodes.querySelector(`[data-node="${CSS.escape(n.id)}"]`);
+      return n.y + (el ? el.offsetHeight : 160);
+    }));
+    baseX = Math.min(...schema.nodes.map((n) => n.x));
+    baseY = snap(bottom + 100);
+  }
+  const ids = {};
+  const added = t.nodes.map((d) => {
+    const raw = JSON.parse(JSON.stringify(d));
+    const node = normalize({ nodes: [{ ...raw, id: uid(d.kind), x: baseX + d.x, y: baseY + d.y }], links: [] }).nodes[0];
+    delete node.key;
+    ids[d.key] = node.id;
+    return node;
+  });
+  schema.nodes.push(...added);
+  t.links.forEach(([a, b]) => schema.links.push({ id: uid('l'), from: ids[a], to: ids[b] }));
+  const firstAgent = added.find((n) => n.kind === 'agent');
+  select(firstAgent ? { type: 'node', id: firstAgent.id } : null);
+  renderCanvas();
+  fitView();
+  scheduleSave();
+  toast(`Шаблон «${t.name}» добавлен на поле`);
+}
+
+function toggleTemplateMenu(force) {
+  const menu = $('#tpl-menu');
+  const open = force ?? menu.hidden;
+  menu.hidden = !open;
+  $('#tpl-btn').setAttribute('aria-expanded', String(open));
 }
 
 function duplicateNode(n) {
@@ -906,6 +993,7 @@ function fitView() {
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !els.keyDialog.hidden) { closeKeyDialog(); return; }
+  if (e.key === 'Escape' && !$('#tpl-menu').hidden) { toggleTemplateMenu(false); return; }
   if (e.target.closest('input, textarea, select')) return;
   if ((e.key === 'Delete' || e.key === 'Backspace') && selection) {
     e.preventDefault();
@@ -998,7 +1086,7 @@ async function runRealAgent(n, inputs, token) {
   const runId = uid('run');
   const live = {
     phase: 'Собирает запрос', model: n.model, effort: n.effort,
-    system: n.systemPrompt.trim(), user, thinking: '', text: '', note: '',
+    system: n.systemPrompt.trim(), user, thinking: '', text: '', note: '', log: [], sources: [],
   };
   trace.live[n.id] = live;
   run.agentRunId = runId;
@@ -1014,12 +1102,21 @@ async function runRealAgent(n, inputs, token) {
     else if (ev.kind === 'thinking') { live.thinking += ev.text; live.phase = 'Рассуждает'; }
     else if (ev.kind === 'text') { live.text += ev.text; live.phase = 'Пишет ответ · ' + live.text.length + ' симв.'; }
     else if (ev.kind === 'fallback') live.note = `${ev.from} отказалась отвечать, запрос передан ${ev.to}`;
+    else if (ev.kind === 'tool') {
+      const line = ev.name === 'web_search' ? `Ищет: «${ev.query || '…'}»` : ev.name === 'web_fetch' ? `Читает: ${ev.url || '…'}` : `Инструмент: ${ev.name}`;
+      live.log.push(line);
+      live.phase = line;
+    } else if (ev.kind === 'sources') {
+      for (const it of ev.items) if (!live.sources.some((x) => x.url === it.url)) live.sources.push(it);
+    } else if (ev.kind === 'continue') {
+      live.log.push('Поиск длинный: сервер поставил ход на паузу, продолжаем');
+    }
     scheduleLiveRender();
   });
 
   let res;
   try {
-    res = await store.runAgent({ runId, model: n.model, effort: n.effort, system: live.system, user });
+    res = await store.runAgent({ runId, model: n.model, effort: n.effort, tools: n.tools, system: live.system, user });
   } finally {
     off();
     if (run) run.agentRunId = null;
@@ -1032,6 +1129,7 @@ async function runRealAgent(n, inputs, token) {
     thinking: res.thinking ?? live.thinking, text: res.text ?? live.text,
     usage: res.usage, ms: res.ms, stopReason: res.stopReason,
     note: live.note, error: res.ok ? null : res.error,
+    log: live.log, sources: res.sources?.length ? res.sources : live.sources,
   };
   scheduleSave();
   if (run?.token !== token) throw CANCELLED;
@@ -1236,6 +1334,20 @@ function toast(text, actionLabel, onAction) {
 $('#add-agent').onclick = () => addNode('agent');
 $('#add-source').onclick = () => addNode('source');
 $('#add-sink').onclick = () => addNode('sink');
+$('#tpl-menu').innerHTML = TEMPLATES.map((t) => `
+  <button class="tpl-item" role="menuitem" data-tpl="${t.id}">
+    <strong>${esc(t.name)}</strong><span>${esc(t.note)}</span>
+  </button>`).join('');
+$('#tpl-btn').onclick = (e) => { e.stopPropagation(); toggleTemplateMenu(); };
+$('#tpl-menu').onclick = (e) => {
+  const item = e.target.closest('[data-tpl]');
+  if (!item) return;
+  toggleTemplateMenu(false);
+  addTemplate(TEMPLATES.find((t) => t.id === item.dataset.tpl));
+};
+document.addEventListener('pointerdown', (e) => {
+  if (!$('#tpl-menu').hidden && !e.target.closest('#tpl-menu, #tpl-btn')) toggleTemplateMenu(false);
+});
 els.runBtn.onclick = () => (run ? stopRun() : startRun());
 els.modeSim.onclick = () => setMode('sim');
 els.modeReal.onclick = () => setMode('real');
