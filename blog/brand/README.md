@@ -1,6 +1,6 @@
 # neverfilmed — брендинг Instagram
 
-Блог: англоязычные Reels без лица, ниша — кинематографичное AI-видео.
+Блог: англоязычные Reels без лица. Ниша — AI-видео и AI-инструменты: кинематографичные ролики, туториалы, промпты, тесты и сравнения инструментов.
 
 ## Логотип (аватарка)
 
@@ -19,29 +19,29 @@
 ## Шапка профиля
 
 **Поле «Имя»** (до 64 символов, участвует в поиске):
-- `Neverfilmed | Cinematic AI Video` — с ключевыми словами для поиска (рекомендую)
-- `Neverfilmed | Cinematic Visuals` — без слова «AI»
+- `Neverfilmed | AI Video & AI Tools` — обе части темы, ключевые слова для поиска (рекомендую)
+- `Neverfilmed | AI Video & Tools` — короче
 
 **Категория:** Digital creator
 
-**Описание** (до 150 символов). Вариант A — рекомендую:
+**Описание** (до 150 символов). Вариант A, 127 символов, рекомендую:
 ```
-Shots no camera ever filmed 🎬
-Cinematic AI visuals + the prompts behind them
+Cinematic AI video + the tools that make it 🎬
+Tutorials • prompts • honest tool tests
+Follow to create what was never filmed ↓
+```
+
+Вариант B, 119 символов, упор на обзоры инструментов:
+```
+AI video tools, tested so you don't have to 🎬
+Prompts, tutorials & side-by-side comparisons
 Follow for the next drop ↓
 ```
 
-Вариант B — без слова «AI»:
+Вариант C, 100 символов, на этап, когда пойдут интеграции:
 ```
-Visuals that were never filmed.
-Every shot comes with its secret 🎬
-Follow for the next drop ↓
-```
-
-Вариант C — на этап, когда пойдут интеграции:
-```
-Cinematic visuals, zero cameras 🎬
-Prompts • breakdowns • tools
+AI video & AI tools: tested, compared, explained
+Prompts • tutorials • reviews
 📩 Collabs: tap Email
 ```
 
