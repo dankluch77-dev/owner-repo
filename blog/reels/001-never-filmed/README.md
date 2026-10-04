@@ -1,8 +1,10 @@
 # Reel 001 — «None of these shots were filmed»
 
-Первый «вау»-ролик для @vavermo: 4 AI-кадра + хук + финальная заставка. 15,3 с, 1080×1920, 24 fps, H.264, без звука (тишина AAC).
+Первый «вау»-ролик для @vavermo: 4 AI-кадра + хук + финальная заставка (логотип + @vavermo). 14,8 с, 1080×1920, 24 fps, H.264, без звука (тишина AAC).
 
-**Готовый ролик (v2):** https://d2ol7oe51mr4n9.cloudfront.net/user_3JxUbc8PGuiR69r80nsQhAUlxXp/5f4fa6f1-822a-4c7b-8572-9fb6b4dea634.mp4
+**Готовый ролик (v3):** https://d2ol7oe51mr4n9.cloudfront.net/user_3JxUbc8PGuiR69r80nsQhAUlxXp/8d2edd1b-9229-4bda-b23f-cd2c2170eedc.mp4
+
+v2 (заставка с текстом): https://d2ol7oe51mr4n9.cloudfront.net/user_3JxUbc8PGuiR69r80nsQhAUlxXp/5f4fa6f1-822a-4c7b-8572-9fb6b4dea634.mp4
 
 v1 (со старым волком): https://d2ol7oe51mr4n9.cloudfront.net/user_3JxUbc8PGuiR69r80nsQhAUlxXp/1c385d56-4278-43ef-9a15-7bf97c9a85cf.mp4
 
@@ -33,7 +35,7 @@ v1 (со старым волком): https://d2ol7oe51mr4n9.cloudfront.net/user_
 **Урок:** бегущие животные — слабое место AI-видео. Реалистичнее работают медленные движения + «документальные» слова в промпте: telephoto lens, overcast light, film grain, BBC Earth style.
 
 ## Сборка
-- `overlays.html` + `render-overlays.js` — хук, счётчик «SHOT 0X / 04», заставка (Playwright → PNG в `build/`).
+- `overlays.html` + `render-overlays.js` — хук, счётчик «SHOT 0X / 04», заставка 2 с: только логотип и @vavermo, без лишнего текста (Playwright → PNG в `build/`).
 - `build.sh` — монтаж ffmpeg: обрезка, лёгкий контраст/насыщенность, наложение графики, заставка, тишина.
 - Исходные клипы кладутся в `build/clips/1..4.mp4` (папка `build/` не коммитится).
 

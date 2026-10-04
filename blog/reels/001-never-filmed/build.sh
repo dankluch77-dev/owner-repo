@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 
 B=build
 SEG=3.2      # seconds kept from each clip
-END=2.5      # end card length
+END=2.0      # end card length
 FPS=24      # match the Kling source frame rate
 # Where each clip's best section starts (seconds into the source clip)
 START=(1.5 0.8 1.6 1.8)
