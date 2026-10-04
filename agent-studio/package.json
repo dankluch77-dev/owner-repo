@@ -1,7 +1,7 @@
 {
   "name": "agent-studio",
   "productName": "Студия агентов",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Личная карта ИИ-агентов: блоки, связи, шаги, промпты и модели.",
   "main": "main.js",
@@ -19,6 +19,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "ai.js",
       "src/**/*"
     ],
     "directories": {
@@ -30,5 +31,8 @@
     "portable": {
       "artifactName": "AgentStudio-${version}.exe"
     }
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0"
   }
 }

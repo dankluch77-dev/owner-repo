@@ -2,6 +2,7 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
+const ai = require('./ai');
 
 // Своя папка для данных: на Windows это %APPDATA%\agent-studio
 app.setPath('userData', path.join(app.getPath('appData'), 'agent-studio'));
@@ -77,6 +78,12 @@ ipcMain.handle('schema:import', async (e) => {
   if (canceled || !filePaths.length) return null;
   return JSON.parse(await fs.readFile(filePaths[0], 'utf8'));
 });
+
+ipcMain.handle('key:status', () => ai.keyStatus());
+ipcMain.handle('key:set', (_e, key) => ai.setKey(key));
+ipcMain.handle('key:clear', () => ai.clearKey());
+ipcMain.handle('agent:run', (e, req) => ai.runAgent(e.sender, req));
+ipcMain.handle('agent:abort', (_e, runId) => ai.abortAgent(runId));
 
 app.whenReady().then(() => {
   createWindow();

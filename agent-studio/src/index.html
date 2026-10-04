@@ -23,6 +23,10 @@
       <button id="add-source" class="btn" title="Блок, откуда приходят данные"><i class="dot dot-source"></i>Вход</button>
       <button id="add-sink" class="btn" title="Блок, куда приходит итог"><i class="dot dot-sink"></i>Результат</button>
       <span class="toolbar-sep"></span>
+      <div class="mode" role="radiogroup" aria-label="Режим запуска">
+        <button id="mode-sim" class="mode-btn is-on" role="radio" aria-checked="true" title="Только анимация, бесплатно">Симуляция</button>
+        <button id="mode-real" class="mode-btn" role="radio" aria-checked="false" title="Агенты по-настоящему вызывают Claude">Claude API</button>
+      </div>
       <button id="run" class="btn btn-run" title="Показать, как данные проходят по цепочке">
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"></path></svg><span>Запуск</span>
       </button>
@@ -30,6 +34,7 @@
 
     <div class="topbar-end">
       <span id="save-status" class="save-status">Сохранено</span>
+      <button id="key-btn" class="btn btn-quiet">Ключ API</button>
       <button id="export" class="btn btn-quiet">Экспорт</button>
       <button id="import" class="btn btn-quiet">Импорт</button>
       <input id="import-file" type="file" accept="application/json,.json" hidden>
@@ -59,6 +64,28 @@
 
     <aside id="panel" class="panel" aria-label="Подробности"></aside>
   </main>
+
+  <div id="key-dialog" class="modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="key-title">
+      <h2 id="key-title">Ключ API Anthropic</h2>
+      <p id="key-reason" class="key-reason" hidden></p>
+      <p>Ключ нужен, чтобы агенты отправляли запросы модели Claude. Создать его можно в консоли Anthropic: <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">console.anthropic.com → API keys</a>.</p>
+      <p>Каждый запуск в режиме «Claude API» оплачивается с баланса этого аккаунта. Цена видна у каждой модели и в разделе «Последний запуск».</p>
+      <p>Ключ хранится только на этом компьютере в зашифрованном виде (средствами Windows) и отправляется только в Anthropic.</p>
+      <div id="key-status" class="key-status"></div>
+      <label class="field">
+        <span class="field-label">Новый ключ</span>
+        <input id="key-input" class="input mono-input" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+      </label>
+      <div id="key-error" class="key-error" role="alert" hidden></div>
+      <div class="modal-actions">
+        <button id="key-clear" class="btn btn-danger" hidden>Удалить ключ</button>
+        <span class="spacer"></span>
+        <button id="key-close" class="btn">Закрыть</button>
+        <button id="key-save" class="btn btn-run">Сохранить и проверить</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

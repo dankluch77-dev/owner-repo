@@ -4,12 +4,23 @@
    Справочники
    ================================================================ */
 
+// price: доллары за 1 млн токенов [вход, выход]; effort: можно ли настраивать усилие
 const MODELS = [
-  { id: 'claude-opus-5-5', name: 'Claude Opus 5.5', note: 'Самая сильная модель: сложные рассуждения, планирование, длинные задачи. Дороже и медленнее.' },
-  { id: 'claude-sonnet-5-5', name: 'Claude Sonnet 5.5', note: 'Баланс качества, скорости и цены. Хороший выбор по умолчанию.' },
-  { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', note: 'Быстрая и дешёвая: простые и массовые задачи.' },
-  { id: 'claude-fable-5-1', name: 'Claude Fable 5.1', note: '' },
+  { id: 'claude-opus-5-5', name: 'Claude Opus 5.5', price: [4, 20], effort: true, note: 'Сильная модель для сложных рассуждений, планирования и длинных задач.' },
+  { id: 'claude-sonnet-5-5', name: 'Claude Sonnet 5.5', price: [2, 10], effort: true, note: 'Баланс качества, скорости и цены.' },
+  { id: 'claude-haiku-4-5', name: 'Claude Haiku 4.5', price: [1, 5], effort: false, note: 'Быстрая и дешёвая: простые и массовые задачи. Усилие не настраивается.' },
+  { id: 'claude-fable-5-1', name: 'Claude Fable 5.1', price: [10, 50], effort: true, note: 'Самая мощная модель Anthropic для самых трудных задач. Самая дорогая.' },
 ];
+
+const EFFORTS = [
+  { id: 'low', name: 'Низкое', note: 'Быстро и дёшево, для простых задач.' },
+  { id: 'medium', name: 'Среднее', note: 'Обычный уровень.' },
+  { id: 'high', name: 'Высокое', note: 'Модель думает дольше: для важных задач.' },
+  { id: 'xhigh', name: 'Очень высокое', note: 'Для сложных многошаговых задач.' },
+  { id: 'max', name: 'Максимум', note: 'Когда качество важнее цены и времени.' },
+];
+
+const OLD_STEP_3 = 'Запрос уходит в выбранную модель Claude через API. Сейчас это симуляция, настоящий вызов подключим на следующем этапе.';
 
 const ICONS = {
   agent: '<svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>',
@@ -42,7 +53,7 @@ function claudeSteps() {
   return [
     { title: 'Получает вход', detail: 'Принимает данные, которые пришли по линии от предыдущего блока.' },
     { title: 'Собирает запрос', detail: 'Подставляет вход в шаблон запроса вместо {{вход}} и добавляет системный промпт.' },
-    { title: 'Отправляет модели', detail: 'Запрос уходит в выбранную модель Claude через API. Сейчас это симуляция, настоящий вызов подключим на следующем этапе.' },
+    { title: 'Отправляет модели', detail: 'В режиме «Claude API» запрос уходит в выбранную модель Claude. В режиме «Симуляция» этот шаг только показывается.' },
     { title: 'Думает и пишет ответ', detail: 'Модель читает инструкцию и вход, рассуждает и пишет ответ.' },
     { title: 'Отдаёт результат', detail: 'Готовый ответ уходит по линии следующему блоку.' },
   ];
@@ -60,7 +71,8 @@ function makeNode(kind, x, y) {
     ...base,
     name: 'Новый агент',
     role: '',
-    model: 'claude-sonnet-5-5',
+    model: 'claude-opus-5-5',
+    effort: 'medium',
     input: { text: 'Текст от предыдущего блока', example: '' },
     steps: claudeSteps(),
     systemPrompt: '',
@@ -84,7 +96,8 @@ function defaultSchema() {
         id: 'claude', kind: 'agent', x: 360, y: 136,
         name: 'Claude',
         role: 'Универсальный ИИ-ассистент',
-        model: 'claude-sonnet-5-5',
+        model: 'claude-opus-5-5',
+        effort: 'medium',
         input: { text: 'Текст задачи', example: task },
         steps: claudeSteps(),
         systemPrompt: 'Ты внимательный помощник. Отвечай по-русски, коротко и по делу. Если данных не хватает, перечисли, чего именно.',
@@ -105,6 +118,7 @@ function defaultSchema() {
       { id: 'l-claude-result', from: 'claude', to: 'result' },
     ],
     view: null,
+    settings: { mode: 'sim' },
   };
 }
 
@@ -120,6 +134,9 @@ function normalize(raw) {
         node.input = { ...tpl.input, ...(n.input || {}) };
         node.output = { ...tpl.output, ...(n.output || {}) };
         node.steps = Array.isArray(n.steps) ? n.steps.map((s) => ({ title: String(s?.title ?? ''), detail: String(s?.detail ?? '') })) : tpl.steps;
+        node.steps.forEach((s) => { if (s.detail === OLD_STEP_3) s.detail = claudeSteps()[2].detail; });
+        if (node.model === 'claude-haiku-4-5-20251001') node.model = 'claude-haiku-4-5';
+        if (!EFFORTS.some((e) => e.id === node.effort)) node.effort = 'medium';
       }
       return node;
     });
@@ -129,7 +146,8 @@ function normalize(raw) {
     .map((l) => ({ id: String(l.id || uid('l')), from: l.from, to: l.to }));
   const v = raw.view;
   const view = v && isFinite(v.x) && isFinite(v.y) && isFinite(v.zoom) ? { x: v.x, y: v.y, zoom: v.zoom } : null;
-  return { version: 1, nodes, links, view };
+  const settings = { mode: raw.settings?.mode === 'real' ? 'real' : 'sim' };
+  return { version: 1, nodes, links, view, settings };
 }
 
 /* ================================================================
@@ -179,8 +197,11 @@ let run = null;               // идущая симуляция
 let trace = emptyTrace();     // что показывать на блоках после/во время запуска
 
 function emptyTrace() {
-  return { active: null, step: -1, done: new Set(), flowing: new Set(), received: {} };
+  // live: живые данные настоящего запуска по агентам; error: { id, message } блока, на котором всё остановилось
+  return { active: null, step: -1, done: new Set(), flowing: new Set(), received: {}, live: {}, error: null };
 }
+
+class RunError extends Error {}
 
 const $ = (s, root = document) => root.querySelector(s);
 const els = {
@@ -192,6 +213,9 @@ const els = {
   empty: $('#empty'),
   zoomVal: $('#zoom-reset'),
   runBtn: $('#run'),
+  modeSim: $('#mode-sim'),
+  modeReal: $('#mode-real'),
+  keyDialog: $('#key-dialog'),
   saveStatus: $('#save-status'),
 };
 
@@ -291,13 +315,37 @@ function nodeBody(n) {
     : `<div class="node-role">${esc(short(n.description, 70))}</div>`;
 }
 
+function runStats(r) {
+  const parts = [];
+  if (r.ms) parts.push((r.ms / 1000).toFixed(1).replace('.', ',') + ' с');
+  const cost = costOf(r);
+  if (cost != null) parts.push('≈ $' + cost.toFixed(4));
+  return parts.join(' · ');
+}
+
+function costOf(r) {
+  const m = modelById(r.servedModel) || modelById(r.model);
+  if (!m || !r.usage) return null;
+  return (r.usage.input * m.price[0] + r.usage.output * m.price[1]) / 1e6;
+}
+
 function nodeProgress(n) {
   const isActive = trace.active === n.id;
   const isDone = trace.done.has(n.id);
-  if (!isActive && !isDone) return '<div class="node-progress" hidden></div>';
+  const isError = trace.error?.id === n.id;
+  const live = trace.live[n.id];
+  if (!isActive && !isDone && !isError) return '<div class="node-progress" hidden></div>';
   let label = 'Готово';
   let pct = 100;
-  if (isActive) {
+  let barCls = 'node-progress-bar';
+  if (isError) {
+    label = 'Ошибка: ' + trace.error.message;
+  } else if (isActive && live) {
+    label = live.phase;
+    barCls += ' is-indeterminate';
+  } else if (isDone && live && n.lastRun) {
+    label = 'Готово · ' + runStats(n.lastRun);
+  } else if (isActive) {
     if (n.kind === 'agent' && n.steps.length) {
       const i = Math.max(0, trace.step);
       label = `Шаг ${i + 1} из ${n.steps.length} · ${n.steps[i].title || 'без названия'}`;
@@ -307,7 +355,7 @@ function nodeProgress(n) {
       pct = 60;
     }
   }
-  return `<div class="node-progress"><div class="node-progress-label">${esc(label)}</div><div class="node-progress-bar"><i style="width:${pct}%"></i></div></div>`;
+  return `<div class="node-progress"><div class="node-progress-label" title="${esc(label)}">${esc(label)}</div><div class="${barCls}"><i style="width:${pct}%"></i></div></div>`;
 }
 
 function renderNodes() {
@@ -318,6 +366,7 @@ function renderNodes() {
       selection?.type === 'node' && selection.id === n.id && 'is-selected',
       trace.active === n.id && 'is-active',
       trace.done.has(n.id) && 'is-done',
+      trace.error?.id === n.id && 'is-error',
     ].filter(Boolean).join(' ');
     return `
       <div class="${cls}" data-node="${esc(n.id)}" style="left:${n.x}px;top:${n.y}px">
@@ -357,7 +406,7 @@ function renderPanel() {
   const p = els.panel;
   if (selection?.type === 'node') {
     const n = nodeById(selection.id);
-    if (n) { p.innerHTML = n.kind === 'agent' ? agentPanel(n) : simplePanel(n); syncStepHighlight(); return; }
+    if (n) { p.innerHTML = n.kind === 'agent' ? agentPanel(n) : simplePanel(n); syncStepHighlight(); fillRunSection(); return; }
   }
   if (selection?.type === 'link') {
     const l = linkById(selection.id);
@@ -373,7 +422,7 @@ function overviewPanel() {
       <h2>Как читать схему</h2>
       <p>Каждый блок делает свою часть работы. Линии показывают, куда уходят данные: от правого кружка одного блока к левому кружку другого.</p>
       <p>Нажми на блок, чтобы увидеть, что он получает, какие шаги выполняет, с какими промптами и моделью работает и что отдаёт дальше.</p>
-      <p>«Запуск» прогоняет данные по всей цепочке, шаг за шагом.</p>
+      <p>«Запуск» прогоняет данные по всей цепочке. В режиме «Симуляция» это только анимация. В режиме «Claude API» каждый агент по-настоящему отправляет запрос модели Claude, и его ответ уходит дальше по линии.</p>
       <div class="legend">
         <div><i class="dot dot-source"></i>Вход: откуда приходят данные</div>
         <div><i class="dot dot-agent"></i>ИИ-агент: обрабатывает данные моделью Claude</div>
@@ -387,6 +436,7 @@ function agentPanel(n) {
   const incoming = schema.links.filter((l) => l.to === n.id).map((l) => l.from);
   const outgoing = schema.links.filter((l) => l.from === n.id).map((l) => l.to);
   const model = modelById(n.model);
+  const effortOptions = EFFORTS.map((e) => `<option value="${e.id}" ${e.id === n.effort ? 'selected' : ''}>${esc(e.name)}</option>`).join('');
   const options = MODELS.map((m) => `<option value="${m.id}" ${m.id === n.model ? 'selected' : ''}>${esc(m.name)}</option>`).join('')
     + (model ? '' : `<option value="${esc(n.model)}" selected>${esc(n.model)}</option>`);
 
@@ -412,7 +462,11 @@ function agentPanel(n) {
     <section class="section">
       <div class="section-head"><h3 class="section-title">Модель</h3></div>
       <select id="f-model" class="select" data-field="model">${options}</select>
-      <div class="model-note">${esc(model?.note || '')}</div>
+      <div class="model-note">${esc(modelNote(model))}</div>
+      ${model?.effort === false ? '' : `
+        ${field('Усилие', 'Насколько глубоко модель думает перед ответом. Выше усилие: дольше и дороже.',
+          `<select id="f-effort" class="select" data-field="effort">${effortOptions}</select>`)}
+        <div class="model-note" id="effort-note">${esc(EFFORTS.find((e) => e.id === n.effort)?.note || '')}</div>`}
     </section>
 
     <section class="section">
@@ -450,10 +504,76 @@ function agentPanel(n) {
       ${field('Пример результата', '', `<textarea id="f-output-example" class="textarea" data-field="output.example" rows="3">${esc(n.output.example)}</textarea>`)}
     </section>
 
+    <section class="section" id="run-section">
+      <div class="section-head">
+        <h3 class="section-title">Последний запуск</h3>
+        <span class="section-note">с настоящим ИИ</span>
+      </div>
+      ${runSectionHtml(n)}
+    </section>
+
     <div class="panel-foot">
       <button class="btn" data-action="duplicate">Копия агента</button>
       <button class="btn btn-danger" data-action="delete-node">Удалить агента</button>
     </div>`;
+}
+
+function modelNote(m) {
+  if (!m) return '';
+  return `${m.note} Цена: $${m.price[0]} за 1 млн токенов на входе, $${m.price[1]} на выходе.`;
+}
+
+function runSectionHtml(n) {
+  const r = trace.live[n.id] && trace.active === n.id ? trace.live[n.id] : n.lastRun;
+  if (!r) {
+    return `<div class="field-hint">Агент ещё не запускался с настоящим ИИ. Переключи режим на «Claude API» и нажми «Запуск».</div>`;
+  }
+  return `
+    <div class="run-status" id="lr-status"></div>
+    <div class="run-meta" id="lr-meta"></div>
+    <details class="run-details">
+      <summary>Что ушло в модель</summary>
+      <div class="field-label">Системный промпт</div>
+      <pre class="readout" id="lr-system"></pre>
+      <div class="field-label">Сообщение (шаблон с подставленным входом)</div>
+      <pre class="readout" id="lr-user"></pre>
+    </details>
+    <details class="run-details" id="lr-thinking-box">
+      <summary>Как модель рассуждала (кратко)</summary>
+      <pre class="readout" id="lr-thinking"></pre>
+    </details>
+    <div class="field-label">Ответ</div>
+    <pre class="readout readout-answer" id="lr-answer"></pre>`;
+}
+
+/* Заполняем раздел текстом отдельно от разметки: так при потоковом ответе не сбрасываются раскрытые блоки. */
+function fillRunSection() {
+  const n = selection?.type === 'node' && nodeById(selection.id);
+  if (!n || n.kind !== 'agent' || !$('#lr-status', els.panel)) return;
+  const isLive = trace.active === n.id && trace.live[n.id];
+  const r = isLive ? trace.live[n.id] : n.lastRun;
+  if (!r) return;
+  const status = $('#lr-status', els.panel);
+  status.className = 'run-status ' + (isLive ? 'is-live' : r.error ? 'is-error' : 'is-ok');
+  status.textContent = isLive ? r.phase : r.error ? r.error : 'Готово';
+
+  const meta = [];
+  const m = modelById(r.model);
+  meta.push((m ? m.name : r.model) + (m?.effort === false ? '' : ', усилие: ' + (EFFORTS.find((e) => e.id === r.effort)?.name || r.effort).toLowerCase()));
+  if (r.servedModel && r.servedModel !== r.model) meta.push('ответила модель ' + r.servedModel);
+  if (r.note) meta.push(r.note);
+  if (r.usage) meta.push(`токенов: ${r.usage.input} на входе, ${r.usage.output} на выходе`);
+  const stats = !isLive && runStats(r);
+  if (stats) meta.push(stats);
+  if (r.at && !isLive) meta.push(new Date(r.at).toLocaleString('ru-RU'));
+  $('#lr-meta', els.panel).textContent = meta.join(' · ');
+
+  $('#lr-system', els.panel).textContent = r.system || '(нет)';
+  $('#lr-user', els.panel).textContent = r.user || '';
+  $('#lr-thinking', els.panel).textContent = r.thinking || (isLive ? 'Пока пусто…' : 'Модель не показала рассуждения: для простых задач она может отвечать сразу.');
+  const answer = $('#lr-answer', els.panel);
+  answer.textContent = r.text || (isLive ? '…' : '(пусто)');
+  if (isLive) answer.scrollTop = answer.scrollHeight;
 }
 
 function simplePanel(n) {
@@ -477,7 +597,7 @@ function simplePanel(n) {
       </div>
       ${isSource
         ? field('Данные для старта', 'Этот текст уйдёт по линии первым при запуске.', `<textarea id="f-data" class="textarea" data-field="data" rows="5">${esc(n.data)}</textarea>`)
-        : `<div class="field-hint">${got ? 'При последнем запуске пришло:' : 'Запусти цепочку, и здесь появится итог.'}</div>${got ? `<div class="textarea" style="min-height:0">${esc(got)}</div>` : ''}`}
+        : `<div class="field-hint">${got ? 'При последнем запуске пришло:' : 'Запусти цепочку, и здесь появится итог.'}</div>${got ? `<pre class="readout readout-answer">${esc(got)}</pre>` : ''}`}
     </section>
     <div class="panel-foot">
       <button class="btn btn-danger" data-action="delete-node">Удалить блок</button>
@@ -527,7 +647,8 @@ els.panel.addEventListener('input', (e) => {
   if (!n) return;
   if (t.dataset.field) {
     setPath(n, t.dataset.field, t.value);
-    if (t.dataset.field === 'model') $('.model-note', els.panel).textContent = modelById(t.value)?.note || '';
+    if (t.dataset.field === 'model') { renderNodes(); renderPanel(); scheduleSave(); return; }
+    if (t.dataset.field === 'effort') $('#effort-note', els.panel).textContent = EFFORTS.find((x) => x.id === t.value)?.note || '';
   } else if (t.dataset.stepField) {
     const i = Number(t.closest('.step').dataset.step);
     n.steps[i][t.dataset.stepField] = t.value;
@@ -784,6 +905,7 @@ function fitView() {
 }
 
 window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !els.keyDialog.hidden) { closeKeyDialog(); return; }
   if (e.target.closest('input, textarea, select')) return;
   if ((e.key === 'Delete' || e.key === 'Backspace') && selection) {
     e.preventDefault();
@@ -865,31 +987,106 @@ function refreshRun() {
   syncStepHighlight();
 }
 
+/* Настоящий вызов Claude для одного агента. Возвращает текст ответа. */
+async function runRealAgent(n, inputs, token) {
+  const input = inputs.length ? inputs.join('\n\n') : (n.input.example || '');
+  if (!input.trim()) {
+    throw new RunError('нет входных данных. Соедини агента с блоком входа или заполни «Пример данных».');
+  }
+  const tpl = n.userPrompt.trim() || '{{вход}}';
+  const user = tpl.includes('{{вход}}') ? tpl.split('{{вход}}').join(input) : tpl + '\n\n' + input;
+  const runId = uid('run');
+  const live = {
+    phase: 'Собирает запрос', model: n.model, effort: n.effort,
+    system: n.systemPrompt.trim(), user, thinking: '', text: '', note: '',
+  };
+  trace.live[n.id] = live;
+  run.agentRunId = runId;
+  refreshRun();
+  if (selection?.type === 'node' && selection.id === n.id) {
+    renderPanel();
+    $('#run-section', els.panel)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  const off = store.onAgentEvent((ev) => {
+    if (ev.runId !== runId) return;
+    if (ev.kind === 'sent') live.phase = 'Ждёт ответ от ' + (modelById(n.model)?.name || n.model);
+    else if (ev.kind === 'thinking') { live.thinking += ev.text; live.phase = 'Рассуждает'; }
+    else if (ev.kind === 'text') { live.text += ev.text; live.phase = 'Пишет ответ · ' + live.text.length + ' симв.'; }
+    else if (ev.kind === 'fallback') live.note = `${ev.from} отказалась отвечать, запрос передан ${ev.to}`;
+    scheduleLiveRender();
+  });
+
+  let res;
+  try {
+    res = await store.runAgent({ runId, model: n.model, effort: n.effort, system: live.system, user });
+  } finally {
+    off();
+    if (run) run.agentRunId = null;
+  }
+
+  n.lastRun = {
+    at: new Date().toISOString(),
+    model: n.model, servedModel: res.model, effort: n.effort,
+    system: live.system, user,
+    thinking: res.thinking ?? live.thinking, text: res.text ?? live.text,
+    usage: res.usage, ms: res.ms, stopReason: res.stopReason,
+    note: live.note, error: res.ok ? null : res.error,
+  };
+  scheduleSave();
+  if (run?.token !== token) throw CANCELLED;
+  if (!res.ok) throw new RunError(res.error);
+  if (res.stopReason === 'max_tokens') toast(`«${n.name}»: ответ обрезан, модель упёрлась в лимит длины`);
+  return res.text;
+}
+
+let liveFrame = 0;
+function scheduleLiveRender() {
+  if (liveFrame) return;
+  liveFrame = requestAnimationFrame(() => {
+    liveFrame = 0;
+    renderNodes();
+    fillRunSection();
+  });
+}
+
 async function startRun() {
   if (!schema.nodes.length) return toast('Сначала добавь хотя бы один блок');
+  const real = schema.settings.mode === 'real';
+  if (real) {
+    if (!store.runAgent) return toast('Настоящий запуск работает только в программе, не в браузере');
+    const st = await store.keyStatus();
+    if (!st.hasKey) { openKeyDialog('Чтобы агенты работали с настоящим ИИ, нужен ключ API.'); return; }
+  }
   const token = {};
-  run = { token };
+  run = { token, agentRunId: null };
   trace = emptyTrace();
   els.runBtn.classList.add('is-running');
   els.runBtn.querySelector('span').textContent = 'Стоп';
   const inbox = {};
+  let current = null;
 
   try {
     for (const id of runOrder()) {
       const n = nodeById(id);
       if (!n) continue;
+      current = id;
       trace.active = id;
       trace.step = 0;
       refreshRun();
 
-      if (n.kind === 'agent' && n.steps.length) {
+      let payload = payloadOf(n);
+      if (real && n.kind === 'agent') {
+        trace.step = -1;
+        payload = await runRealAgent(n, inbox[id] || [], token);
+      } else if (n.kind === 'agent' && n.steps.length) {
         for (let i = 0; i < n.steps.length; i++) {
           trace.step = i;
           refreshRun();
           await sleep(STEP_MS, token);
         }
       } else {
-        await sleep(STEP_MS, token);
+        await sleep(real ? 300 : STEP_MS, token);
       }
 
       if (n.kind === 'sink') trace.received[id] = (inbox[id] || []).join('\n\n') || 'ничего не пришло: блок ни с кем не соединён';
@@ -900,7 +1097,6 @@ async function startRun() {
       const out = schema.links.filter((l) => l.from === id);
       out.forEach((l) => trace.flowing.add(l.id));
       refreshRun();
-      const payload = payloadOf(n);
       out.forEach((l) => (inbox[l.to] = inbox[l.to] || []).push(payload));
       await Promise.all(out.map((l) => animatePacket(l, packetLabel(n), token)));
       out.forEach((l) => trace.flowing.delete(l.id));
@@ -908,8 +1104,15 @@ async function startRun() {
     }
     toast('Цепочка отработала');
   } catch (err) {
-    if (err !== CANCELLED) throw err;
-    trace = emptyTrace();
+    if (err instanceof RunError) {
+      const name = nodeById(current)?.name || 'Блок';
+      trace.error = { id: current, message: err.message };
+      toast(`«${name}»: ${err.message}`);
+    } else if (err === CANCELLED) {
+      trace = emptyTrace();
+    } else {
+      throw err;
+    }
   } finally {
     if (run?.token === token) run = null;
     packetLayer.innerHTML = '';
@@ -918,12 +1121,86 @@ async function startRun() {
     trace.active = null;
     trace.flowing.clear();
     refreshRun();
-    if (selection?.type === 'node' && nodeById(selection.id)?.kind === 'sink') renderPanel();
+    if (selection?.type === 'node') renderPanel();
   }
 }
 
 function stopRun() {
+  if (run?.agentRunId) store.abortAgent(run.agentRunId);
   run = null;
+}
+
+/* ================================================================
+   Режим запуска и ключ API
+   ================================================================ */
+
+function renderMode() {
+  const real = schema.settings.mode === 'real';
+  els.modeSim.classList.toggle('is-on', !real);
+  els.modeReal.classList.toggle('is-on', real);
+  els.modeSim.setAttribute('aria-checked', String(!real));
+  els.modeReal.setAttribute('aria-checked', String(real));
+  els.runBtn.title = real ? 'Запустить цепочку с настоящим Claude (платно)' : 'Показать, как данные проходят по цепочке (бесплатно)';
+}
+
+function setMode(mode) {
+  if (run) return toast('Сначала останови текущий запуск');
+  schema.settings.mode = mode;
+  renderMode();
+  scheduleSave();
+  if (mode === 'real' && store.keyStatus) {
+    store.keyStatus().then((st) => { if (!st.hasKey) openKeyDialog('Чтобы агенты работали с настоящим ИИ, нужен ключ API.'); });
+  }
+}
+
+async function openKeyDialog(reason) {
+  if (!store.keyStatus) return toast('Ключ API можно добавить только в программе, не в браузере');
+  const d = els.keyDialog;
+  $('#key-reason', d).textContent = reason || '';
+  $('#key-reason', d).hidden = !reason;
+  $('#key-error', d).hidden = true;
+  $('#key-input', d).value = '';
+  d.hidden = false;
+  await refreshKeyStatus();
+  $('#key-input', d).focus();
+}
+
+async function refreshKeyStatus() {
+  const st = await store.keyStatus();
+  const el = $('#key-status', els.keyDialog);
+  el.textContent = st.hasKey
+    ? `Ключ сохранён: ${st.hint}` + (st.source === 'env' ? ' (из переменной ANTHROPIC_API_KEY)' : '')
+    : 'Ключа пока нет.';
+  el.classList.toggle('is-ok', st.hasKey);
+  $('#key-clear', els.keyDialog).hidden = st.source !== 'file';
+}
+
+function closeKeyDialog() {
+  els.keyDialog.hidden = true;
+}
+
+async function saveKey() {
+  const d = els.keyDialog;
+  const btn = $('#key-save', d);
+  const err = $('#key-error', d);
+  btn.disabled = true;
+  btn.textContent = 'Проверяю…';
+  err.hidden = true;
+  try {
+    const res = await store.setKey($('#key-input', d).value);
+    if (!res.ok) {
+      err.textContent = res.error;
+      err.hidden = false;
+      return;
+    }
+    $('#key-input', d).value = '';
+    await refreshKeyStatus();
+    closeKeyDialog();
+    toast('Ключ проверен и сохранён');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Сохранить и проверить';
+  }
 }
 
 /* ================================================================
@@ -960,6 +1237,14 @@ $('#add-agent').onclick = () => addNode('agent');
 $('#add-source').onclick = () => addNode('source');
 $('#add-sink').onclick = () => addNode('sink');
 els.runBtn.onclick = () => (run ? stopRun() : startRun());
+els.modeSim.onclick = () => setMode('sim');
+els.modeReal.onclick = () => setMode('real');
+$('#key-btn').onclick = () => openKeyDialog();
+$('#key-save').onclick = saveKey;
+$('#key-close').onclick = closeKeyDialog;
+$('#key-clear').onclick = async () => { await store.clearKey(); await refreshKeyStatus(); toast('Ключ удалён'); };
+$('#key-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveKey(); });
+els.keyDialog.addEventListener('pointerdown', (e) => { if (e.target === els.keyDialog) closeKeyDialog(); });
 $('#zoom-in').onclick = () => zoomCenter(1.2);
 $('#zoom-out').onclick = () => zoomCenter(1 / 1.2);
 els.zoomVal.onclick = fitView;
@@ -981,6 +1266,7 @@ $('#import').onclick = async () => {
   if (run) stopRun();
   schema = next;
   trace = emptyTrace();
+  renderMode();
   select(null);
   renderCanvas();
   if (next.view) Object.assign(view, next.view), applyView();
@@ -998,6 +1284,7 @@ $('#import').onclick = async () => {
   if (saved) schema = saved;
   renderCanvas();
   renderPanel();
+  renderMode();
   if (saved?.view) {
     Object.assign(view, saved.view);
     applyView();

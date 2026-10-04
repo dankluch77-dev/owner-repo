@@ -119,6 +119,62 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .save-status { font-size: var(--fs-sm); color: var(--faint); margin-right: 6px; }
 .save-status.is-error { color: var(--danger); }
 
+/* ---------- режим запуска ---------- */
+.mode {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--ground);
+  margin-right: 6px;
+}
+.mode-btn {
+  height: 24px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: var(--fs-sm);
+}
+.mode-btn:hover { color: var(--text); }
+.mode-btn.is-on { background: var(--card-raised); color: var(--text); }
+#mode-real.is-on { color: var(--agent); }
+
+/* ---------- окно ключа ---------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(5 7 10 / 0.6);
+}
+.modal-card {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 12px;
+  padding: 22px 24px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.5);
+  user-select: text;
+}
+.modal-card h2 { margin: 0; font: 600 var(--fs-xl)/1.25 var(--font-display); }
+.modal-card p { margin: 0; color: var(--muted); }
+.modal-card a { color: var(--signal); }
+.key-reason { color: var(--text) !important; }
+.key-status { font: var(--fs-sm) var(--font-mono); color: var(--muted); }
+.key-status.is-ok { color: var(--source); }
+.key-error { color: var(--danger); font-size: var(--fs-sm); }
+.mono-input { font-family: var(--font-mono); }
+.modal-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+.modal-actions .spacer { flex: 1; }
+.btn:disabled { opacity: 0.6; cursor: progress; }
+
 /* ---------- рабочая область ---------- */
 .workspace { flex: 1; display: flex; min-height: 0; }
 
@@ -219,6 +275,14 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .node-progress-bar { height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; }
 .node-progress-bar i { display: block; height: 100%; background: var(--signal); transition: width 0.3s ease; }
 .node.is-done .node-progress-label { color: var(--source); }
+.node.is-error { border-color: var(--danger); }
+.node.is-error .node-progress-label { color: var(--danger); white-space: normal; }
+.node.is-error .node-progress-bar i { background: var(--danger); }
+.node-progress-bar.is-indeterminate i {
+  width: 40% !important;
+  animation: indeterminate 1.2s ease-in-out infinite;
+}
+@keyframes indeterminate { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
 .node.is-done .node-progress-bar i { background: var(--source); }
 
 .port {
@@ -413,6 +477,35 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 .add-step { justify-self: start; }
 
+.run-status { font-weight: 600; }
+.run-status.is-live { color: var(--signal); }
+.run-status.is-ok { color: var(--source); }
+.run-status.is-error { color: var(--danger); }
+.run-meta { font-size: var(--fs-sm); color: var(--muted); }
+.run-details {
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  background: var(--card);
+}
+.run-details summary { cursor: pointer; color: var(--muted); font-size: var(--fs-sm); }
+.run-details[open] summary { margin-bottom: 8px; }
+.run-details .field-label { display: block; margin: 6px 0 4px; }
+.readout {
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--ground);
+  font: var(--fs-sm)/1.55 var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
+.readout-answer { font-family: var(--font-ui); font-size: var(--fs-md); max-height: 360px; }
+
 .panel-foot { padding: 16px 20px 28px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .btn-danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, transparent); background: transparent; }
 .btn-danger:hover { background: color-mix(in srgb, var(--danger) 14%, transparent); border-color: var(--danger); }
@@ -441,5 +534,6 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   .link-group.is-flowing .link { animation: none; }
+  .node-progress-bar.is-indeterminate i { animation: none; transform: none; }
   .node-progress-bar i { transition: none; }
 }
