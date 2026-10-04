@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+  <title>Студия агентов</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="5" cy="12" r="3"></circle><circle cx="19" cy="6" r="3"></circle><circle cx="19" cy="18" r="3"></circle>
+        <path d="M8 12 C 12 12, 12 6, 16 6 M8 12 C 12 12, 12 18, 16 18"></path>
+      </svg>
+      <span>Студия агентов</span>
+    </div>
+
+    <div class="toolbar">
+      <span class="toolbar-label">Добавить</span>
+      <button id="add-agent" class="btn" title="Новый ИИ-агент"><i class="dot dot-agent"></i>Агент</button>
+      <button id="add-source" class="btn" title="Блок, откуда приходят данные"><i class="dot dot-source"></i>Вход</button>
+      <button id="add-sink" class="btn" title="Блок, куда приходит итог"><i class="dot dot-sink"></i>Результат</button>
+      <span class="toolbar-sep"></span>
+      <button id="run" class="btn btn-run" title="Показать, как данные проходят по цепочке">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"></path></svg><span>Запуск</span>
+      </button>
+    </div>
+
+    <div class="topbar-end">
+      <span id="save-status" class="save-status">Сохранено</span>
+      <button id="export" class="btn btn-quiet">Экспорт</button>
+      <button id="import" class="btn btn-quiet">Импорт</button>
+      <input id="import-file" type="file" accept="application/json,.json" hidden>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section id="canvas" class="canvas" tabindex="0" aria-label="Поле со схемой агентов">
+      <div id="world" class="world">
+        <svg id="links" class="links" aria-hidden="true"></svg>
+        <div id="nodes"></div>
+        <svg id="packets" class="links" aria-hidden="true"><g id="packet-layer"></g></svg>
+      </div>
+      <div id="empty" class="empty" hidden>
+        <strong>Поле пустое</strong>
+        <span>Дважды щёлкни по полю или нажми «Агент», чтобы создать первого агента.</span>
+      </div>
+      <div class="hint">
+        Тяни от правого кружка к левому, чтобы соединить · Колесо мыши: масштаб · Тяни фон: двигать поле · Двойной клик: новый агент
+      </div>
+      <div class="zoom">
+        <button id="zoom-out" class="zoom-btn" title="Уменьшить">−</button>
+        <button id="zoom-reset" class="zoom-val" title="Показать всю схему">100%</button>
+        <button id="zoom-in" class="zoom-btn" title="Увеличить">+</button>
+      </div>
+    </section>
+
+    <aside id="panel" class="panel" aria-label="Подробности"></aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
