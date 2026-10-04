@@ -1,7 +1,7 @@
 {
   "name": "agent-studio",
   "productName": "Студия агентов",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Личная карта ИИ-агентов: блоки, связи, шаги, промпты и модели.",
   "main": "main.js",
@@ -23,10 +23,12 @@
       "src/**/*"
     ],
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build"
     },
     "win": {
-      "target": "portable"
+      "target": "portable",
+      "icon": "build/icon.ico"
     },
     "portable": {
       "artifactName": "AgentStudio-${version}.exe"

@@ -23,6 +23,7 @@ function createWindow() {
     minHeight: 600,
     title: 'Студия агентов',
     backgroundColor: '#101318',
+    icon: path.join(__dirname, 'src', 'icon.png'),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
