@@ -1,0 +1,12 @@
+{
+  "name": "neverfilmed-brand",
+  "private": true,
+  "description": "Sources for the neverfilmed logo and profile mockup",
+  "scripts": {
+    "render": "node render.js"
+  },
+  "dependencies": {
+    "@fontsource/instrument-serif": "^5.0.0",
+    "@fontsource/inter": "^5.0.0"
+  }
+}

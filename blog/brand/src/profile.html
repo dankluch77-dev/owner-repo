@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "Inter"; font-weight: 400; src: url("node_modules/@fontsource/inter/files/inter-latin-400-normal.woff2"); }
+  @font-face { font-family: "Inter"; font-weight: 600; src: url("node_modules/@fontsource/inter/files/inter-latin-600-normal.woff2"); }
+  @font-face { font-family: "Inter"; font-weight: 700; src: url("node_modules/@fontsource/inter/files/inter-latin-700-normal.woff2"); }
+  :root { --bg: #000; --fg: #F5F5F5; --muted: #A8A8A8; --btn: #262626; --accent: #0095F6; }
+  body.light { --bg: #fff; --fg: #0A0A0A; --muted: #737373; --btn: #EFEFEF; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: "Inter", "Noto Color Emoji", sans-serif; width: 390px; }
+  .wrap { padding: 14px 16px 18px; }
+  .handle { font-weight: 700; font-size: 20px; margin-bottom: 14px; }
+  .top { display: flex; align-items: center; gap: 22px; }
+  .avatar { width: 86px; height: 86px; border-radius: 50%; overflow: hidden; flex: none; }
+  .avatar img { width: 100%; height: 100%; display: block; }
+  .stats { display: flex; flex: 1; justify-content: space-around; text-align: center; }
+  .stats b { display: block; font-size: 17px; font-weight: 600; }
+  .stats span { font-size: 13px; }
+  .name { font-weight: 600; font-size: 14px; margin-top: 12px; }
+  .cat { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .bio { font-size: 14px; line-height: 1.38; margin-top: 2px; white-space: pre-line; }
+  .btns { display: flex; gap: 6px; margin-top: 14px; }
+  .btn { flex: 1; background: var(--btn); border-radius: 8px; text-align: center; font-weight: 600; font-size: 14px; padding: 8px 0; }
+  .btn.primary { background: var(--accent); color: #fff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="handle">neverfilmed</div>
+  <div class="top">
+    <div class="avatar"><img src="../logo-1-viewfinder.png"></div>
+    <div class="stats">
+      <div><b>6</b><span>posts</span></div>
+      <div><b>0</b><span>followers</span></div>
+      <div><b>0</b><span>following</span></div>
+    </div>
+  </div>
+  <div class="name">Neverfilmed | Cinematic AI Video</div>
+  <div class="cat">Digital creator</div>
+  <div class="bio">Shots no camera ever filmed 🎬
+Cinematic AI visuals + the prompts behind them
+Follow for the next drop ↓</div>
+  <div class="btns">
+    <div class="btn primary">Follow</div>
+    <div class="btn">Message</div>
+    <div class="btn">Email</div>
+  </div>
+</div>
+</body>
+</html>

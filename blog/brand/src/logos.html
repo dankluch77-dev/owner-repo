@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "Instrument Serif"; font-style: italic; src: url("node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff2"); }
+  @font-face { font-family: "Instrument Serif"; font-style: normal; src: url("node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2"); }
+  html, body { margin: 0; padding: 0; background: #000; }
+  svg { display: block; }
+  .v { display: none; }
+  body[data-v="1"] #v1, body[data-v="2"] #v2, body[data-v="3"] #v3 { display: block; }
+</style>
+</head>
+<body>
+
+<!-- 1: Viewfinder + setting sun -->
+<svg id="v1" class="v" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <radialGradient id="bg1" cx="50%" cy="45%" r="70%">
+      <stop offset="0" stop-color="#1B1A1D"/>
+      <stop offset="1" stop-color="#0A0A0B"/>
+    </radialGradient>
+    <linearGradient id="sun1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFC266"/>
+      <stop offset="1" stop-color="#F0782F"/>
+    </linearGradient>
+    <clipPath id="horizon1"><rect x="0" y="0" width="1080" height="600"/></clipPath>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#bg1)"/>
+  <g fill="none" stroke="#F3EDE2" stroke-width="34" stroke-linecap="square">
+    <path d="M270 400 V270 H400"/>
+    <path d="M680 270 H810 V400"/>
+    <path d="M810 680 V810 H680"/>
+    <path d="M400 810 H270 V680"/>
+  </g>
+  <circle cx="540" cy="570" r="145" fill="url(#sun1)" clip-path="url(#horizon1)"/>
+  <rect x="365" y="618" width="350" height="26" rx="13" fill="#F3EDE2"/>
+</svg>
+
+<!-- 2: Serif monogram -->
+<svg id="v2" class="v" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <radialGradient id="bg2" cx="50%" cy="40%" r="75%">
+      <stop offset="0" stop-color="#1B1A1D"/>
+      <stop offset="1" stop-color="#0A0A0B"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#bg2)"/>
+  <text x="510" y="700" text-anchor="middle" font-family="Instrument Serif" font-style="italic"
+        font-size="600" fill="#F3EDE2" letter-spacing="-20">nf</text>
+  <circle cx="770" cy="680" r="34" fill="#F29A3A"/>
+</svg>
+
+<!-- 3: Empty film frame with golden-hour sky -->
+<svg id="v3" class="v" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <linearGradient id="sky3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1F4E5A"/>
+      <stop offset="0.55" stop-color="#C9744A"/>
+      <stop offset="1" stop-color="#F6B25C"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="#F3EDE2"/>
+  <rect x="230" y="320" width="620" height="440" rx="34" fill="#111012"/>
+  <g fill="#F3EDE2">
+    <rect x="276" y="342" width="44" height="30" rx="8"/>
+    <rect x="364" y="342" width="44" height="30" rx="8"/>
+    <rect x="452" y="342" width="44" height="30" rx="8"/>
+    <rect x="540" y="342" width="44" height="30" rx="8"/>
+    <rect x="628" y="342" width="44" height="30" rx="8"/>
+    <rect x="716" y="342" width="44" height="30" rx="8"/>
+    <rect x="276" y="708" width="44" height="30" rx="8"/>
+    <rect x="364" y="708" width="44" height="30" rx="8"/>
+    <rect x="452" y="708" width="44" height="30" rx="8"/>
+    <rect x="540" y="708" width="44" height="30" rx="8"/>
+    <rect x="628" y="708" width="44" height="30" rx="8"/>
+    <rect x="716" y="708" width="44" height="30" rx="8"/>
+  </g>
+  <rect x="262" y="396" width="556" height="288" rx="14" fill="url(#sky3)"/>
+  <circle cx="540" cy="640" r="70" fill="#FFE0A3" opacity="0.95"/>
+  <rect x="262" y="640" width="556" height="44" fill="#111012" opacity="0.92"/>
+</svg>
+
+</body>
+</html>
