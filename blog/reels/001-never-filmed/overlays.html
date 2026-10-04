@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "Inter"; font-weight: 600; src: url("../../brand/src/node_modules/@fontsource/inter/files/inter-latin-600-normal.woff2"); }
+  @font-face { font-family: "Inter"; font-weight: 800; src: url("../../brand/src/node_modules/@fontsource/inter/files/inter-latin-800-normal.woff2"); }
+  @font-face { font-family: "Instrument Serif"; font-style: italic; src: url("../../brand/src/node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff2"); }
+  @font-face { font-family: "Instrument Serif"; font-style: normal; src: url("../../brand/src/node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2"); }
+  :root { --cream: #F3EDE2; --amber: #F29A3A; --ink: #0A0A0B; }
+  html, body { margin: 0; background: transparent; }
+  .frame { width: 1080px; height: 1920px; position: relative; display: none; overflow: hidden; }
+  body[data-o="hook"] #hook, body[data-o="end"] #end { display: block; }
+  body[data-o^="shot"] #shot { display: block; }
+
+  /* Hook: centred band, clear of the Reels top bar and the caption area; a soft scrim keeps it legible over bright skies */
+  #hook::before { content: ""; position: absolute; left: -120px; right: -120px; top: 600px; height: 600px;
+    background: radial-gradient(closest-side, rgba(0,0,0,.45) 0%, rgba(0,0,0,.28) 45%, rgba(0,0,0,.1) 75%, rgba(0,0,0,0) 100%); }
+  #hook .text { position: absolute; left: 80px; right: 80px; top: 780px; text-align: center;
+    font-family: "Inter"; font-weight: 800; font-size: 104px; line-height: 1.04; letter-spacing: -3px; color: #fff;
+    text-shadow: 0 4px 30px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.5); }
+  #hook .accent { font-family: "Instrument Serif"; font-style: italic; font-weight: 400; color: var(--amber);
+    font-size: 132px; letter-spacing: -1px; }
+
+  /* Shot counter */
+  #shot .counter { position: absolute; left: 72px; top: 270px; font-family: "Inter"; font-weight: 600; font-size: 34px;
+    letter-spacing: 6px; color: var(--cream); text-shadow: 0 2px 12px rgba(0,0,0,.6); }
+  #shot .counter b { color: var(--amber); font-weight: 600; }
+
+  /* End card */
+  #end { background: radial-gradient(ellipse at 50% 42%, #1B1A1D 0%, var(--ink) 70%); }
+  #end .logo { position: absolute; left: 50%; top: 470px; width: 300px; height: 300px; transform: translateX(-50%); }
+  #end .line1 { position: absolute; left: 0; right: 0; top: 860px; text-align: center; font-family: "Instrument Serif";
+    font-size: 120px; line-height: 1.05; color: var(--cream); }
+  #end .line1 i { color: var(--amber); }
+  #end .line2 { position: absolute; left: 0; right: 0; top: 1150px; text-align: center; font-family: "Inter"; font-weight: 600;
+    font-size: 44px; color: var(--cream); opacity: .85; }
+  #end .handle { position: absolute; left: 0; right: 0; top: 1250px; text-align: center; font-family: "Inter"; font-weight: 800;
+    font-size: 52px; color: var(--amber); letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<div class="frame" id="hook">
+  <div class="text">None of these shots were <span class="accent">filmed.</span></div>
+</div>
+
+<div class="frame" id="shot">
+  <div class="counter">SHOT <b id="n">01</b> / 04</div>
+</div>
+
+<div class="frame" id="end">
+  <svg class="logo" viewBox="270 270 540 540">
+    <defs>
+      <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#FFC266"/><stop offset="1" stop-color="#F0782F"/>
+      </linearGradient>
+      <clipPath id="hz"><rect x="0" y="0" width="1080" height="600"/></clipPath>
+    </defs>
+    <g fill="none" stroke="#F3EDE2" stroke-width="34" stroke-linecap="square">
+      <path d="M287 400 V287 H400"/><path d="M680 287 H793 V400"/>
+      <path d="M793 680 V793 H680"/><path d="M400 793 H287 V680"/>
+    </g>
+    <circle cx="540" cy="570" r="145" fill="url(#sun)" clip-path="url(#hz)"/>
+    <rect x="365" y="618" width="350" height="26" rx="13" fill="#F3EDE2"/>
+  </svg>
+  <div class="line1">0 cameras.<br><i>0 crew.</i></div>
+  <div class="line2">Every prompt is in the caption ↓</div>
+  <div class="handle">@vavermo</div>
+</div>
+
+</body>
+</html>
