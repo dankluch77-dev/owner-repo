@@ -1076,8 +1076,14 @@ function refreshRun() {
 }
 
 /* Настоящий вызов Claude для одного агента. Возвращает текст ответа. */
+/* Несколько входов подписываем, чтобы агент понимал, от какого блока что пришло. */
+function joinInputs(inputs) {
+  if (inputs.length === 1) return inputs[0].text;
+  return inputs.map((x) => `### От блока «${x.from}»\n${x.text}`).join('\n\n');
+}
+
 async function runRealAgent(n, inputs, token) {
-  const input = inputs.length ? inputs.join('\n\n') : (n.input.example || '');
+  const input = inputs.length ? joinInputs(inputs) : (n.input.example || '');
   if (!input.trim()) {
     throw new RunError('нет входных данных. Соедини агента с блоком входа или заполни «Пример данных».');
   }
@@ -1187,7 +1193,7 @@ async function startRun() {
         await sleep(real ? 300 : STEP_MS, token);
       }
 
-      if (n.kind === 'sink') trace.received[id] = (inbox[id] || []).join('\n\n') || 'ничего не пришло: блок ни с кем не соединён';
+      if (n.kind === 'sink') trace.received[id] = inbox[id]?.length ? joinInputs(inbox[id]) : 'ничего не пришло: блок ни с кем не соединён';
       trace.done.add(id);
       trace.active = null;
       trace.step = -1;
@@ -1195,7 +1201,7 @@ async function startRun() {
       const out = schema.links.filter((l) => l.from === id);
       out.forEach((l) => trace.flowing.add(l.id));
       refreshRun();
-      out.forEach((l) => (inbox[l.to] = inbox[l.to] || []).push(payload));
+      out.forEach((l) => (inbox[l.to] = inbox[l.to] || []).push({ from: n.name || 'без названия', text: payload }));
       await Promise.all(out.map((l) => animatePacket(l, packetLabel(n), token)));
       out.forEach((l) => trace.flowing.delete(l.id));
       refreshRun();
