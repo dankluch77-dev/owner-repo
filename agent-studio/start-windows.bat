@@ -23,4 +23,17 @@ if not exist "node_modules\electron\dist\electron.exe" (
   )
 )
 
+rem npm иногда не запускает докачку самого Electron, тогда скачиваем его явно
+if not exist "node_modules\electron\dist\electron.exe" (
+  echo Докачиваю Electron...
+  call node "node_modules\electron\install.js"
+)
+
+if not exist "node_modules\electron\dist\electron.exe" (
+  echo.
+  echo Не получилось скачать Electron. Удали папку node_modules и запусти файл ещё раз.
+  pause
+  exit /b 1
+)
+
 start "" "node_modules\electron\dist\electron.exe" "."
