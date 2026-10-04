@@ -1,7 +1,7 @@
 {
-  "name": "neverfilmed-brand",
+  "name": "vavermo-brand",
   "private": true,
-  "description": "Sources for the neverfilmed logo and profile mockup",
+  "description": "Sources for the vavermo logo and profile mockup",
   "scripts": {
     "render": "node render.js"
   },
